@@ -1,57 +1,42 @@
+import java.util.ArrayList;
 
-Page
-2
-of 2
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.event.*;
-public class Game extends JPanel implements Runnable, KeyListener{
-private BufferedImage back;
-private int key;
-public Game() {
-new Thread(this).start();
-this.addKeyListener(this);
-key =-1;
-}
-public void run()
-{
-try
-{
-while(true)
-{
-Thread.currentThread().sleep(5);
-repaint();
-}
-}
-catch(Exception e)
-{
-}
-}
-public void paint(Graphics g){
-Graphics2D twoDgraph = (Graphics2D) g;
-if( back ==null)
-back=(BufferedImage)( (createImage(getWidth(), getHeight())));
-Graphics g2d = back.createGraphics();
-g2d.clearRect(0,0,getSize().width, getSize().height);
-g2d.setFont( new Font("Broadway", Font.BOLD, 50));
-g2d.drawString("key " + key, 340, 100);
-twoDgraph.drawImage(back, null, 0, 0);
-}
-//DO NOT DELETE
-@Override
-public void keyTyped(KeyEvent e) {
-// TODO Auto-generated method stub
-}
-//DO NOT DELETE
-@Override
-public void keyPressed(KeyEvent e) {
-// TODO Auto-generated method stub
-key= e.getKeyCode();
-System.out.println(key);
-}
-//DO NOT DELETE
-@Override
-public void keyReleased(KeyEvent e) {
-}
+public class Game {
+    Player player;
+    ArrayList<Enemy> enemies;
+    Level level;
+
+    public Game() {
+        player = new Player(100, 100);
+        enemies = new ArrayList<>();
+        enemies.add(new Enemy(300, 100));
+        enemies.add(new Enemy(500, 200));
+
+        level = new Level();
+    }
+
+    public void start() {
+        // Simple game loop
+        while (true) {
+            update();
+            render();
+
+            try {
+                Thread.sleep(100); // controls speed
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void update() {
+        player.move();
+
+        for (Enemy enemy : enemies) {
+            enemy.move();
+        }
+    }
+
+    public void render() {
+        System.out.println("Player at: (" + player.x + ", " + player.y + ")");
+    }
 }
