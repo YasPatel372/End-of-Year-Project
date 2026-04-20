@@ -9,7 +9,7 @@ public class Enemy {
         this.y = y;
         this.width = w;
         this.height = h;
-        pic = new ImageIcon("alien.png");
+        pic = new ImageIcon("Boss.png");
     }
 
     public int getX() { return x; }
