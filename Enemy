@@ -10,6 +10,11 @@ public class Enemy {
         this.width = w;
         this.height = h;
         pic = new ImageIcon("Boss.png");
+        pic = new ImageIcon("ugly.png");
+        pic = new ImageIcon("snake.png");
+        pic = new ImageIcon("spider.png");
+        pic = new ImageIcon("brute.png");
+        pic = new ImageIcon("gelatinous.png");
     }
 
     public int getX() { return x; }
