@@ -1,29 +1,26 @@
 import java.awt.Graphics;
-import java.awt.Color;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 
 public class Platform
 {
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+    private int x, y;
+    private int width, height;
+    private Image image;
 
-    public Platform(int x, int y, int width, int height)
+    public Platform(int x, int y, int width, int height, String imageName)
     {
         this.x = x;
         this.y = y;
+
         this.width = width;
         this.height = height;
+
+        image = new ImageIcon(imageName).getImage();
     }
 
     public void draw(Graphics g)
     {
-        g.setColor(Color.GREEN);
-        g.fillRect(x, y, width, height);
+        g.drawImage(image, x, y, width, height, null);
     }
-
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getWidth() { return width; }
-    public int getHeight() { return height; }
 }
