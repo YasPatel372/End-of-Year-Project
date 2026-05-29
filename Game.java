@@ -49,7 +49,7 @@ public class Game extends JPanel implements Runnable, KeyListener
         gameOver = false;
         win = false;
 
-        background = new ImageIcon("background.png").getImage();
+        background = new ImageIcon("Background.png").getImage();
 
         new Thread(this).start();
     }
