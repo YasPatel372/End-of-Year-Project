@@ -1,81 +1,99 @@
-
 import javax.swing.JPanel;
-import java.awt.Graphics;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Image;
+import java.awt.*;
 import javax.swing.ImageIcon;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 public class Game extends JPanel implements Runnable, KeyListener
 {
     private Player player;
-    private Enemy enemy1;
-    private Enemy enemy2;
-    private Enemy enemy3;
+
+    private Enemy enemy1, enemy2, enemy3, bossEnemy;
+
     private Platform ground;
-    private Coin coin1;
-    private Coin coin2;
-    private Coin coin3;
-    private Coin coin4;
-    private Coin coin5;
-    private boolean left;
-    private boolean right;
-    private boolean gameOver;
-    private boolean win;
-    private int level;
-    private int score;
+
+    private Coin coin1, coin2, coin3, coin4, coin5;
+
+    private boolean left, right;
+    private boolean gameOver, win, paused;
+    private boolean shield;
+
+    private int level, score;
+
     private Image background;
 
     public Game()
     {
-        player = new Player();
+        setPreferredSize(new Dimension(1000, 700));
 
-        enemy1 = new Enemy(300, 500, 3, "enemy1.png");
-        enemy2 = new Enemy(500, 500, 5, "enemy2.png");
-        enemy3 = new Enemy(700, 500, 7, "enemy2.png");
+        addKeyListener(this);
+        setFocusable(true);
 
-        ground = new Platform(0, 550, 1000, 150);
-
-        coin1 = new Coin(200, 480);
-        coin2 = new Coin(400, 480);
-        coin3 = new Coin(600, 480);
-        coin4 = new Coin(750, 480);
-        coin5 = new Coin(850, 480);
-
-        level = 1;
-        score = 0;
         gameOver = false;
         win = false;
+        paused = false;
+        left = false;
+        right = false;
+        level = 1;
+        score = 0;
+        shield = false;
+
+        resetGame();
 
         background = new ImageIcon("Background.png").getImage();
 
         new Thread(this).start();
     }
 
+    public void resetGame()
+    {
+        player = new Player();
+        player.setX(100);
+
+        enemy1 = new Enemy(300, 480, 3, "enemy1.png");
+        enemy2 = new Enemy(500, 480, 5, "enemy2.png");
+        enemy3 = new Enemy(700, 480, 7, "enemy2.png");
+
+        bossEnemy = new Enemy(850, 480, 12, "enemyBoss.png");
+
+        ground = new Platform(0, 500, 1000, 150, "platform.png");
+
+        coin1 = new Coin(200, 450);
+        coin2 = new Coin(400, 450);
+        coin3 = new Coin(600, 450);
+        coin4 = new Coin(750, 450);
+        coin5 = new Coin(900, 450);
+
+        left = false;
+        right = false;
+
+        gameOver = false;
+        win = false;
+        paused = false;
+
+        level = 1;
+        score = 0;
+    }
+
     public void run()
     {
-        try
+        while(true)
         {
-            while(true)
-            {
-                Thread.sleep(20);
-                update();
-                repaint();
-            }
+            try { Thread.sleep(20); } catch(Exception e) {}
+
+            update();
+            repaint();
         }
-        catch(Exception e) {}
     }
 
     public void update()
     {
-        if(gameOver == true || win == true) { return; }
+        if(gameOver || win || paused) return;
 
-        if(left == true) { player.moveLeft(); }
-        if(right == true) { player.moveRight(); }
+        if(left) player.moveLeft();
+        if(right) player.moveRight();
 
         player.gravity();
+
         enemy1.move();
 
         if(level >= 2)
@@ -84,9 +102,55 @@ public class Game extends JPanel implements Runnable, KeyListener
             enemy3.move();
         }
 
+        if(level == 3)
+        {
+            bossEnemy.move();
+        }
+
         checkCoins();
         checkCollision();
         checkWin();
+    }
+
+    public void checkWin()
+    {
+        if (getWidth() == 0) return;
+
+        // LEVEL 1 → LEVEL 2
+        if(level == 1 && player.getX() + player.getWidth() >= getWidth())
+        {
+            level = 2;
+            player.setX(100);
+            score += 50;
+
+            // ⭐ LEVEL 2 COINS
+            coin1.setPosition(250, 450);
+            coin2.setPosition(450, 450);
+            coin3.setPosition(650, 450);
+            coin4.setPosition(800, 450);
+            coin5.setPosition(900, 450);
+        }
+
+        // LEVEL 2 → LEVEL 3
+        if(level == 2 && player.getX() + player.getWidth() >= getWidth())
+        {
+            level = 3;
+            player.setX(100);
+            score += 100;
+
+            // ⭐ LEVEL 3 COINS (spread out)
+            coin1.setPosition(150, 450);
+            coin2.setPosition(350, 430);
+            coin3.setPosition(550, 450);
+            coin4.setPosition(750, 430);
+            coin5.setPosition(900, 450);
+        }
+
+        // LEVEL 3 → WIN
+        if(level == 3 && player.getX() + player.getWidth() >= getWidth())
+        {
+            win = true;
+        }
     }
 
     public void checkCoins()
@@ -96,76 +160,70 @@ public class Game extends JPanel implements Runnable, KeyListener
         int pw = player.getWidth();
         int ph = player.getHeight();
 
-        if(coin1.checkCollision(px, py, pw, ph)) { score += 10; }
-        if(coin2.checkCollision(px, py, pw, ph)) { score += 10; }
-        if(coin3.checkCollision(px, py, pw, ph)) { score += 10; }
-        if(coin4.checkCollision(px, py, pw, ph)) { score += 10; }
-        if(coin5.checkCollision(px, py, pw, ph)) { score += 10; }
+        if(coin1.checkCollision(px, py, pw, ph)) score += 10;
+        if(coin2.checkCollision(px, py, pw, ph)) score += 10;
+        if(coin3.checkCollision(px, py, pw, ph)) score += 10;
+        if(coin4.checkCollision(px, py, pw, ph)) score += 10;
+        if(coin5.checkCollision(px, py, pw, ph)) score += 10;
     }
 
     public void checkCollision()
     {
-        if(player.getX() + player.getWidth() >= enemy1.getX()
-        && player.getX() <= enemy1.getX() + enemy1.getWidth()
-        && player.getY() + player.getHeight() >= enemy1.getY())
-        {
-            gameOver = true;
-        }
+        if(shield) return;
+
+        if(hit(enemy1)) gameOver = true;
 
         if(level >= 2)
         {
-            if(player.getX() + player.getWidth() >= enemy2.getX()
-            && player.getX() <= enemy2.getX() + enemy2.getWidth()
-            && player.getY() + player.getHeight() >= enemy2.getY())
-            {
-                gameOver = true;
-            }
+            if(hit(enemy2)) gameOver = true;
+            if(hit(enemy3)) gameOver = true;
+        }
 
-            if(player.getX() + player.getWidth() >= enemy3.getX()
-            && player.getX() <= enemy3.getX() + enemy3.getWidth()
-            && player.getY() + player.getHeight() >= enemy3.getY())
-            {
-                gameOver = true;
-            }
+        if(level == 3)
+        {
+            if(hit(bossEnemy)) gameOver = true;
         }
     }
 
-    public void checkWin()
+    public boolean hit(Enemy e)
     {
-        if(level == 1 && player.getX() >= 900)
-        {
-            level = 2;
-            player.setX(100);
-            score += 50;
-            coin1 = new Coin(150, 480);
-            coin2 = new Coin(300, 480);
-            coin3 = new Coin(500, 480);
-            coin4 = new Coin(650, 480);
-            coin5 = new Coin(800, 480);
-        }
+        int px = player.getX();
+        int py = player.getY();
+        int pw = player.getWidth();
+        int ph = player.getHeight();
 
-        if(level == 2 && player.getX() >= 920)
-        {
-            score += 100;
-            win = true;
-        }
+        int ex = e.getX();
+        int ey = e.getY();
+        int ew = e.getWidth();
+        int eh = e.getHeight();
+
+        boolean xOverlap = px + pw > ex && px < ex + ew;
+        boolean yOverlap = py + ph > ey && py < ey + eh;
+
+        return xOverlap && yOverlap;
     }
 
-    public void paint(Graphics g)
+    public void paintComponent(Graphics g)
     {
-        super.paint(g);
+        super.paintComponent(g);
 
-        g.drawImage(background, 0, 0, 1000, 700, null);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 30));
-        g.drawString("Forgotten Quest", 350, 50);
-        g.drawString("Level: " + level, 50, 50);
-
-        g.setColor(Color.YELLOW);
-        g.drawString("Score: " + score, 800, 50);
+        g.drawImage(background, 0, 0, getWidth(), getHeight(), null);
 
         ground.draw(g);
+
+        player.draw(g);
+
+        enemy1.draw(g);
+        if(level >= 2)
+        {
+            enemy2.draw(g);
+            enemy3.draw(g);
+        }
+
+        if(level == 3)
+        {
+            bossEnemy.draw(g);
+        }
 
         coin1.draw(g);
         coin2.draw(g);
@@ -173,59 +231,61 @@ public class Game extends JPanel implements Runnable, KeyListener
         coin4.draw(g);
         coin5.draw(g);
 
-        player.draw(g);
-        enemy1.draw(g);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
 
-        if(level >= 2)
+        g.drawString("Score: " + score, 800, 40);
+        g.drawString("Level: " + level, 50, 40);
+
+        if(shield)
         {
-            enemy2.draw(g);
-            enemy3.draw(g);
-
-            g.setColor(Color.ORANGE);
-            g.fillRect(350, 550, 120, 50);
-            g.fillRect(600, 550, 100, 50);
-            g.setColor(Color.WHITE);
-            g.drawString("LAVA", 365, 585);
-            g.drawString("LAVA", 615, 585);
+            g.setColor(Color.CYAN);
+            g.setFont(new Font("Arial", Font.BOLD, 30));
+            g.drawString("SHIELD ACTIVE", 380, 80);
         }
 
-        g.setColor(Color.YELLOW);
-        g.fillRect(930, 470, 40, 80);
-
-        if(gameOver == true)
+        if(gameOver)
         {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 60));
             g.drawString("GAME OVER", 300, 300);
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 30));
-            g.drawString("Final Score: " + score, 380, 370);
         }
 
-        if(win == true)
+        if(win)
         {
             g.setColor(Color.GREEN);
             g.setFont(new Font("Arial", Font.BOLD, 60));
-            g.drawString("YOU SAVED THE KINGDOM!", 120, 300);
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Arial", Font.BOLD, 30));
-            g.drawString("Final Score: " + score, 400, 370);
+            g.drawString("YOU WIN", 350, 300);
+        }
+
+        if(paused)
+        {
+            g.setColor(Color.BLUE);
+            g.setFont(new Font("Arial", Font.BOLD, 50));
+            g.drawString("PAUSED", 380, 300);
         }
     }
 
     public void keyPressed(KeyEvent e)
     {
         int key = e.getKeyCode();
-        if(key == KeyEvent.VK_A) { left = true; }
-        if(key == KeyEvent.VK_D) { right = true; }
-        if(key == KeyEvent.VK_SPACE) { player.jump(); }
+
+        if(key == 37) left = true;
+        if(key == 39) right = true;
+        if(key == 32) player.jump();
+
+        if(key == 82) resetGame();
+        if(key == 80) paused = !paused;
+
+        if(key == 90) shield = !shield;
     }
 
     public void keyReleased(KeyEvent e)
     {
         int key = e.getKeyCode();
-        if(key == KeyEvent.VK_A) { left = false; }
-        if(key == KeyEvent.VK_D) { right = false; }
+
+        if(key == 37) left = false;
+        if(key == 39) right = false;
     }
 
     public void keyTyped(KeyEvent e) {}
