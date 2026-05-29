@@ -1,4 +1,3 @@
-
 import java.awt.Graphics;
 import java.awt.Color;
 
@@ -13,7 +12,9 @@ public class Coin
     {
         this.x = x;
         this.y = y;
+
         size = 20;
+
         collected = false;
     }
 
@@ -23,6 +24,7 @@ public class Coin
         {
             g.setColor(Color.YELLOW);
             g.fillOval(x, y, size, size);
+
             g.setColor(Color.ORANGE);
             g.drawOval(x, y, size, size);
         }
@@ -30,12 +32,15 @@ public class Coin
 
     public boolean checkCollision(int px, int py, int pw, int ph)
     {
-        if(collected == true)
+        if(collected)
         {
             return false;
         }
 
-        if(px + pw >= x && px <= x + size && py + ph >= y && py <= y + size)
+        if(px + pw >= x &&
+           px <= x + size &&
+           py + ph >= y &&
+           py <= y + size)
         {
             collected = true;
             return true;
@@ -44,8 +49,11 @@ public class Coin
         return false;
     }
 
-    public boolean isCollected()
+    // ⭐ ADD THIS METHOD (lets coins move between levels)
+    public void setPosition(int newX, int newY)
     {
-        return collected;
+        this.x = newX;
+        this.y = newY;
+        this.collected = false; // optional: resets coin so it appears again
     }
 }
